@@ -952,7 +952,62 @@ document.getElementById('bConv').onclick=()=>{
   applyDancingScript();
 };
 
-// Convert applies Dancing Script font to typed text - no OCR, no API needed
+
+// ── AUTO-SAVE (localStorage) ──
+let saveTimer=null;
+function autoSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{
+      saveCurPageCanvas();
+      const data=pages.map((p,i)=>({
+        text:p.text||'',font:p.font||'Dancing Script',bg:p.bg||'lined',
+        snap:p.snap?p.snap.toDataURL():''
+      }));
+      localStorage.setItem('notes_v2_pages',JSON.stringify(data));
+      localStorage.setItem('notes_v2_cur',curPage);
+    }catch(e){}
+  },1500);
+}
+
+// ── AUTO-LOAD ──
+function autoLoad(){
+  try{
+    const raw=localStorage.getItem('notes_v2_pages');
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    if(!data||!data.length)return;
+    pages=data.map(d=>({text:d.text||'',font:d.font||'Dancing Script',bg:d.bg||'lined',hist:[],hIdx:0,uStk:[],rStk:[],snapUrl:d.snap}));
+    renderTabs();
+    const savedPage=parseInt(localStorage.getItem('notes_v2_cur'))||0;
+    let loaded=0;
+    const withSnaps=pages.filter(p=>p.snapUrl&&p.snapUrl.length>10);
+    if(withSnaps.length===0){loadPage(Math.min(savedPage,pages.length-1));return;}
+    pages.forEach((p,i)=>{
+      if(p.snapUrl&&p.snapUrl.length>10){
+        const img=new Image();
+        img.onload=()=>{
+          const sc=document.createElement('canvas');
+          sc.width=img.width;sc.height=img.height;
+          sc.getContext('2d').drawImage(img,0,0);
+          p.snap=sc;delete p.snapUrl;
+          loaded++;
+          if(loaded===withSnaps.length)loadPage(Math.min(savedPage,pages.length-1));
+        };
+        img.onerror=()=>{delete p.snapUrl;loaded++;if(loaded===withSnaps.length)loadPage(Math.min(savedPage,pages.length-1));};
+        img.src=p.snapUrl;
+      }
+    });
+    toast('Notes restored!');
+  }catch(e){}
+}
+window.addEventListener('load',()=>{setTimeout(autoLoad,300);});
+
+// ── OFFLINE DETECTION ──
+window.addEventListener('online',()=>toast('Back online!'));
+window.addEventListener('offline',()=>toast('Offline mode — writing still works!'));
+
+// ── CONVERT — applies Dancing Script font to typed text ──
 function applyDancingScript(){
   const el=document.getElementById('otxt');
   const typed=el.innerText.trim();
@@ -971,7 +1026,9 @@ function applyDancingScript(){
     b.classList.toggle('on', b.dataset.font==='Dancing Script');
   });
   toast('Beautiful Dancing Script applied! ✦');
-  autoSave();
+  // Save after short delay to ensure all functions are ready
+  setTimeout(()=>{try{autoSave();}catch(e){}}, 100);
 }
-
-
+</script>
+</body>
+</html>
