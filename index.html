@@ -22,7 +22,11 @@
   &quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'&gt;&lt;rect width='512' height='512' rx='80' fill='%232563eb'/&gt;&lt;text y='360' x='60' font-size='360'&gt;✍️&lt;/text&gt;&lt;/svg&gt;&quot;,&quot;sizes&quot;:&quot;512x512&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;,&quot;purpose&quot;:&quot;any maskable&quot;}]
 }">
 <title>My Notes</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&family=Caveat:wght@400;600&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<!-- Fonts embedded via @import with fallbacks - loads from cache after first visit -->
+<style>
+/* Import fonts - cached by service worker after first load */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Pacifico&family=Satisfy&family=Sacramento&family=Great+Vibes&family=Caveat:wght@400;600&family=Lora:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap');
+</style>
 <style>
 :root {
   --bg: #f8f7f4;
@@ -295,10 +299,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'DM Sans'
       </div>
       <div id="rp-body">
         <div class="rp-font-row">
-          <button class="font-btn on" data-font="Caveat">Handwritten</button>
+          <button class="font-btn on" data-font="Dancing Script">✦ Dancing</button>
+          <button class="font-btn" data-font="Pacifico">Pacifico</button>
+          <button class="font-btn" data-font="Satisfy">Satisfy</button>
+          <button class="font-btn" data-font="Sacramento">Sacramento</button>
+          <button class="font-btn" data-font="Great Vibes">Great Vibes</button>
+          <button class="font-btn" data-font="Caveat">Caveat</button>
           <button class="font-btn" data-font="Lora">Serif</button>
           <button class="font-btn" data-font="DM Sans">Clean</button>
-          <button class="font-btn" data-font="Instrument Serif">Elegant</button>
         </div>
         <div id="otxt" contenteditable="true" spellcheck="false"></div>
         <p id="rp-ph">Write on the canvas with your S Pen, then tap ✦ Convert to see your handwriting transformed into beautiful text here.</p>
@@ -365,47 +373,68 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:'DM Sans'
 </div>
 
 <!-- Loading -->
-<!-- Manual install instructions -->
-<div id="install-manual" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:center;justify-content:center;" onclick="this.style.display='none'">
-  <div style="background:#fff;border-radius:18px;padding:26px;width:88%;max-width:400px;text-align:center;">
-    <div style="font-size:2.5em;margin-bottom:10px;">📱</div>
-    <h3 style="font-family:'Instrument Serif',serif;font-size:1.3em;margin-bottom:10px;">Add to Home Screen</h3>
-    <p style="font-size:0.82em;color:#6b6760;margin-bottom:16px;">To install this app on your Samsung tablet:</p>
-    <div style="background:#f8f7f4;border-radius:10px;padding:14px;text-align:left;font-size:0.82em;line-height:2em;color:#1a1917;">
-      <b>Samsung Internet Browser:</b><br>
-      1. Tap the <b>⋮ menu</b> (top right)<br>
-      2. Tap <b>"Add page to"</b><br>
-      3. Tap <b>"Home screen"</b><br>
-      4. Tap <b>"Add"</b> to confirm<br><br>
-      <b>Chrome Browser:</b><br>
-      1. Tap the <b>⋮ menu</b> (top right)<br>
-      2. Tap <b>"Add to Home screen"</b><br>
-      3. Tap <b>"Add"</b> to confirm
+<!-- Claude Convert Steps Dialog -->
+<div id="claude-steps-dlg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
+  <div style="background:#fff;border-radius:20px;padding:28px 24px;width:92%;max-width:420px;box-shadow:0 12px 40px rgba(0,0,0,.2);">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:2.5em;margin-bottom:8px;">✨</div>
+      <h3 style="font-family:'Instrument Serif',serif;font-size:1.3em;margin-bottom:6px;">Convert via Claude</h3>
+      <p style="font-size:0.8em;color:#6b6760;line-height:1.5;">Your canvas is saved. Now open Claude to convert it free!</p>
     </div>
-    <button style="margin-top:16px;background:#2563eb;color:#fff;border:none;padding:11px 28px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.9em;cursor:pointer;" onclick="document.getElementById('install-manual').style.display='none'">Got it!</button>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:16px;margin-bottom:16px;font-size:0.82em;line-height:2em;color:#1a1917;">
+      <b>Steps:</b><br>
+      1. Tap <b>Open Claude</b> below<br>
+      2. Send this message to Claude:<br>
+      <div style="background:#1a1917;color:#fff;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:0.92em;line-height:1.5;font-family:monospace;">Please convert my handwriting notes. I have saved the canvas image to localStorage key 'notes_pending_img'. Read it and transcribe all handwritten text exactly as written, keeping line breaks.</div>
+      3. Copy Claude's reply<br>
+      4. Come back to this app<br>
+      5. Paste in the Text Panel
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="document.getElementById('claude-steps-dlg').style.display='none'" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #e8e4de;background:#f8f7f4;font-family:'DM Sans',sans-serif;font-size:0.85em;cursor:pointer;color:#6b6760;">Cancel</button>
+      <button onclick="window.open('https://claude.ai','_blank');document.getElementById('claude-steps-dlg').style.display='none';" style="flex:2;padding:11px;border-radius:10px;border:none;background:#2563eb;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85em;font-weight:600;cursor:pointer;">Open Claude →</button>
+    </div>
   </div>
 </div>
+
+<!-- API Key Setup Dialog -->
+<div id="key-setup-dlg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
+  <div style="background:#fff;border-radius:20px;padding:28px 24px;width:90%;max-width:440px;box-shadow:0 12px 40px rgba(0,0,0,.2);">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:2.5em;margin-bottom:8px;">🔑</div>
+      <h3 style="font-family:'Instrument Serif',serif;font-size:1.4em;margin-bottom:6px;">One-time Setup</h3>
+      <p style="font-size:0.82em;color:#6b6760;line-height:1.5;">To use Convert in your app, you need an Anthropic API key. This is a one-time setup — your key is saved on your device forever.</p>
+    </div>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:14px;margin-bottom:16px;font-size:0.8em;line-height:1.9;color:#1a1917;">
+      <b>Get your free key in 2 minutes:</b><br>
+      1. Go to <b>console.anthropic.com</b><br>
+      2. Sign up (free account)<br>
+      3. Click <b>API Keys</b> → <b>Create Key</b><br>
+      4. Copy the key and paste below<br>
+      <br>
+      💡 <b>Cost:</b> Minimum $5 top-up — lasts <b>1000+ conversions</b>
+    </div>
+    <input type="password" id="key-input" placeholder="sk-ant-api03-..." style="width:100%;border:1.5px solid #e8e4de;border-radius:10px;padding:12px 14px;font-size:0.88em;outline:none;margin-bottom:12px;font-family:'DM Sans',sans-serif;color:#1a1917;">
+    <div style="display:flex;gap:8px;">
+      <button onclick="document.getElementById('key-setup-dlg').style.display='none'" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #e8e4de;background:#f8f7f4;font-family:'DM Sans',sans-serif;font-size:0.85em;cursor:pointer;color:#6b6760;">Cancel</button>
+      <button id="key-save-btn" style="flex:2;padding:11px;border-radius:10px;border:none;background:#2563eb;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85em;font-weight:600;cursor:pointer;">Save Key & Convert</button>
+    </div>
+  </div>
+</div>
+
+
 
 <div id="loading">
   <div class="spin-wrap">
     <div class="spinner"></div>
-    <p>Converting handwriting…</p>
+    <p>Converting handwriting...</p>
   </div>
 </div>
 
 <!-- Toast -->
 <div id="toast"></div>
 
-<!-- PWA Install Banner -->
-<div id="install-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1917;color:#fff;padding:12px 16px;z-index:500;align-items:center;gap:10px;box-shadow:0 -4px 20px rgba(0,0,0,.2);">
-  <span style="font-size:1.6em;">✍️</span>
-  <div style="flex:1;">
-    <div style="font-weight:600;font-size:0.85em;font-family:'DM Sans',sans-serif;">Install My Notes as an App</div>
-    <div style="font-size:0.72em;color:rgba(255,255,255,.7);margin-top:2px;">Tap Install or use browser menu → Add to Home Screen</div>
-  </div>
-  <button id="install-btn" style="background:#2563eb;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.8em;font-weight:600;cursor:pointer;white-space:nowrap;">Install App</button>
-  <button id="install-dismiss" style="background:rgba(255,255,255,.1);color:#fff;border:none;padding:8px 12px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.8em;cursor:pointer;">✕</button>
-</div>
+
 
 <!-- API Key dialog (for browser use) -->
 <div id="api-key-dlg">
@@ -477,7 +506,7 @@ window.addEventListener('resize',sizeCV);
 setTimeout(sizeCV,200);
 
 // ── PAGES ──
-let pages=[{hist:[],hIdx:0,uStk:[],rStk:[],text:'',font:'Caveat',bg:'lined'}];
+let pages=[{hist:[],hIdx:0,uStk:[],rStk:[],text:'',font:'Dancing Script',bg:'lined'}];
 let curPage=0;
 
 function saveCurPageCanvas(){
@@ -500,6 +529,7 @@ function loadPage(idx){
   // Set text
   const el=document.getElementById('otxt');
   el.style.fontFamily="'"+p.font+"',cursive,sans-serif";
+  el.style.fontSize=(['Sacramento','Great Vibes','Pacifico'].includes(p.font))?'1.6em':'1.25em';
   el.innerText=p.text||'';
   document.getElementById('rp-ph').style.display=p.text?'none':'block';
   // Update font buttons
@@ -990,7 +1020,7 @@ if(dropZone){
   });
 }
 
-// ── CONVERT ──
+// ── CONVERT — Tesseract.js local OCR (free, no API, works offline) ──
 document.getElementById('bConv').onclick=()=>{
   if(!dirty&&!pages[curPage].snap){toast('Write something first!');return;}
   document.getElementById('conv-dlg').classList.add('show');
@@ -999,41 +1029,77 @@ document.getElementById('conv-cancel').onclick=()=>document.getElementById('conv
 
 async function doConvert(mode){
   document.getElementById('conv-dlg').classList.remove('show');
-  document.getElementById('loading').classList.add('show');
-  // Make sure panel is open
   document.getElementById('rpanel').classList.remove('collapsed');
   setTimeout(sizeCV,10);
+  document.getElementById('loading').classList.add('show');
+  document.querySelector('#loading .spin-wrap p').textContent='Reading handwriting...';
+
+  // Auto-detect environment
+  // claudeusercontent.com = running inside claude.ai artifact iframe
+  // github.io = running as standalone GitHub Pages app
+  const host = window.location.hostname;
+  const isClaudeAI = host.includes('claudeusercontent') ||
+                     host.includes('claude.ai') ||
+                     host.includes('anthropic') ||
+                     host === 'localhost';
   try{
-    const b64=CV.toDataURL('image/png').split(',')[1];
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-5',max_tokens:2000,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:'image/png',data:b64}},
-          {type:'text',text:'Transcribe ALL handwritten text visible in this image exactly as written.\nRules:\n- Every line exactly once\n- Keep original line breaks\n- Keep abbreviations and punctuation\n- No markdown formatting, no explanations, no commentary\n- If the canvas appears blank, reply exactly: NOTHING_NEW\n- Preserve the natural flow and line structure of the handwriting'}
-        ]}]
-      })
-    });
-    const d=await res.json();
-    if(d.error){toast('Error: '+d.error.message);return;}
-    const tx=(d.content||[]).map(i=>i.text||'').join('').trim();
-    const el=document.getElementById('otxt');
-    if(tx&&tx!=='NOTHING_NEW'){
-      if(mode==='replace'){
-        el.innerText=tx;
-      } else {
-        const existing=el.innerText.trim();
-        el.innerText=existing?(existing+'\n\n'+tx):tx;
+    let tx = '';
+    if(isClaudeAI){
+      // Claude API - works free inside claude.ai
+      const b64 = CV.toDataURL('image/png').split(',')[1];
+      const res = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({
+          model:'claude-sonnet-4-5',max_tokens:2000,
+          messages:[{role:'user',content:[
+            {type:'image',source:{type:'base64',media_type:'image/png',data:b64}},
+            {type:'text',text:'Transcribe ALL handwritten text in this image exactly as written. Keep every line, keep line breaks, no markdown, no explanations. If blank reply exactly: NOTHING_NEW'}
+          ]}]
+        })
+      });
+      const d = await res.json();
+      if(d.error){toast('Error: '+d.error.message);return;}
+      tx = (d.content||[]).map(i=>i.text||'').join('').trim();
+      if(tx==='NOTHING_NEW'){toast('Nothing to convert!');return;}
+    } else {
+      // Tesseract.js - load dynamically only on GitHub app
+      document.querySelector('#loading .spin-wrap p').textContent='Loading OCR engine...';
+      if(typeof Tesseract === 'undefined'){
+        await new Promise((resolve,reject)=>{
+          const s=document.createElement('script');
+          s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+          s.onload=resolve; s.onerror=reject;
+          document.head.appendChild(s);
+        });
       }
-      pages[curPage].text=el.innerText;
-      document.getElementById('rp-ph').style.display='none';
-      dirty=false;toast('Converted! ✦');autoSave();
-    } else if(tx==='NOTHING_NEW'){toast('Nothing to convert — write something!');}
-    else{toast('Could not read — try writing larger');}
-  }catch(err){toast('Error: '+err.message);}
-  finally{document.getElementById('loading').classList.remove('show');}
+      const result = await Tesseract.recognize(CV,'eng',{
+        logger: m=>{
+          if(m.status==='recognizing text'){
+            document.querySelector('#loading .spin-wrap p').textContent='Reading... '+Math.round(m.progress*100)+'%';
+          }
+        }
+      });
+      tx = result.data.text.trim();
+      if(!tx){toast('Could not read — write larger & darker');return;}
+    }
+    const el = document.getElementById('otxt');
+    if(mode==='replace'){
+      el.innerText = tx;
+    } else {
+      const ex = el.innerText.trim();
+      el.innerText = ex ? ex+'\n\n'+tx : tx;
+    }
+    pages[curPage].text = el.innerText;
+    document.getElementById('rp-ph').style.display='none';
+    dirty=false;toast('Converted!');autoSave();
+  }catch(err){
+    toast('Error: '+err.message);
+    console.error(err);
+  }finally{
+    document.getElementById('loading').classList.remove('show');
+    document.querySelector('#loading .spin-wrap p').textContent='Converting handwriting...';
+  }
 }
 document.getElementById('conv-replace').onclick=()=>doConvert('replace');
 document.getElementById('conv-append').onclick=()=>doConvert('append');
@@ -1058,6 +1124,18 @@ document.getElementById('bDlTx').onclick=()=>{
   a.download='notes-page'+(curPage+1)+'.txt';a.click();
   document.getElementById('dl-dlg').classList.remove('show');
 };
+
+// ── API KEY SETUP ──
+document.getElementById('key-save-btn').onclick=()=>{
+  const k=document.getElementById('key-input').value.trim();
+  if(!k||!k.startsWith('sk-')){toast('Please enter a valid API key starting with sk-');return;}
+  localStorage.setItem('notes_api_key',k);
+  document.getElementById('key-setup-dlg').style.display='none';
+  toast('Key saved! Tap Convert again ✦');
+};
+document.getElementById('key-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter')document.getElementById('key-save-btn').click();
+});
 
 // ── API KEY DIALOG ──
 document.getElementById('api-key-cancel').onclick=()=>document.getElementById('api-key-dlg').classList.remove('show');
@@ -1128,57 +1206,67 @@ function autoLoad(){
 window.addEventListener('load',()=>{setTimeout(autoLoad,300);});
 renderTabs();
 
-// ── PWA SERVICE WORKER ──
+// ── OFFLINE DETECTION ──
+window.addEventListener('online', ()=>toast('Back online!'));
+window.addEventListener('offline',()=>toast('Offline mode — writing still works, Convert needs internet'));
+
+// ── PWA SERVICE WORKER — caches everything for offline use ──
 if('serviceWorker' in navigator){
   const swCode=`
-    const CACHE='notes-pwa-v1';
-    self.addEventListener('install',e=>{self.skipWaiting();});
+    const CACHE='notes-v2-offline';
+    const URLS=[
+      'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Pacifico&family=Satisfy&family=Sacramento&family=Great+Vibes&family=Caveat:wght@400;600&family=Lora:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap',
+      'https://fonts.gstatic.com'
+    ];
+    self.addEventListener('install',e=>{
+      self.skipWaiting();
+      e.waitUntil(
+        caches.open(CACHE).then(c=>{
+          // Cache the app itself + fonts
+          c.add(self.location.origin+self.registration.scope.replace(self.location.origin,'')).catch(()=>{});
+          return Promise.allSettled(URLS.map(u=>c.add(u).catch(()=>{})));
+        })
+      );
+    });
     self.addEventListener('activate',e=>{
-      e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!=='notes-pwa-v1').map(k=>caches.delete(k)))));
+      e.waitUntil(
+        caches.keys().then(keys=>Promise.all(
+          keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))
+        ))
+      );
       self.clients.claim();
     });
     self.addEventListener('fetch',e=>{
-      e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
+      // Cache-first for fonts, network-first for API calls
+      const url=e.request.url;
+      if(url.includes('fonts.googleapis') || url.includes('fonts.gstatic')){
+        e.respondWith(
+          caches.match(e.request).then(r=>r||
+            fetch(e.request).then(res=>{
+              const clone=res.clone();
+              caches.open(CACHE).then(c=>c.put(e.request,clone));
+              return res;
+            }).catch(()=>new Response('',{status:404}))
+          )
+        );
+      } else if(url.includes('anthropic') || url.includes('tesseract')){
+        // Always network for API and OCR
+        e.respondWith(fetch(e.request).catch(()=>new Response(JSON.stringify({error:{message:'No internet connection'}}),{headers:{'Content-Type':'application/json'}})));
+      } else {
+        e.respondWith(
+          caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>new Response('Offline',{status:503})))
+        );
+      }
     });
   `;
   try{
     const blob=new Blob([swCode],{type:'application/javascript'});
     const swUrl=URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).catch(()=>{});
+    navigator.serviceWorker.register(swUrl,{scope:'./'}).catch(()=>{});
   }catch(e){}
 }
 
-// ── PWA INSTALL PROMPT ──
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  document.getElementById('install-bar').style.display='flex';
-});
-window.addEventListener('appinstalled',()=>{
-  document.getElementById('install-bar').style.display='none';
-  toast('App installed! Find it on your home screen 🎉');
-});
-document.getElementById('install-btn').onclick=async()=>{
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    const result=await deferredPrompt.userChoice;
-    if(result.outcome==='accepted')toast('Installing...');
-    deferredPrompt=null;
-  } else {
-    // Samsung browser manual instructions
-    document.getElementById('install-manual').style.display='block';
-  }
-  document.getElementById('install-bar').style.display='none';
-};
-document.getElementById('install-dismiss').onclick=()=>{
-  document.getElementById('install-bar').style.display='none';
-};
-// Show banner if not already installed as app
-setTimeout(()=>{
-  const standalone=window.matchMedia('(display-mode:standalone)').matches||window.navigator.standalone;
-  if(!standalone)document.getElementById('install-bar').style.display='flex';
-},1500);
+
 </script>
 </body>
 </html>
